@@ -71,6 +71,7 @@ plot_elapsed_times_histogram <- function(results,binwidth=250){
 #' Plot the requests per second made during the test
 #'
 #' @param results A data frame returned from the loadtest function
+#' @param bins Number of equal interval bins on the plot
 #' @return A ggplot2 showing the distribution of requests by request per second
 #' @examples
 #' results <- loadtest("google.com","GET")
