@@ -71,12 +71,13 @@ plot_elapsed_times_histogram <- function(results,binwidth=250){
 #' Plot the requests per second made during the test
 #'
 #' @param results A data frame returned from the loadtest function
+#' @param bins Number of equal interval bins on the plot
 #' @return A ggplot2 showing the distribution of requests by request per second
 #' @examples
 #' results <- loadtest("google.com","GET")
 #' plot_requests_per_second(results)
 #' @export
-plot_requests_per_second <- function(results){
+plot_requests_per_second <- function(results, bins = 10L){
   if (!any(c(requireNamespace("ggplot2", quietly = TRUE),
            requireNamespace("dplyr", quietly = TRUE),
            requireNamespace("tidyr", quietly = TRUE)))) {
@@ -86,17 +87,18 @@ plot_requests_per_second <- function(results){
 
   counts <- dplyr::count(results, time_since_start_rounded)
   counts <- tidyr::complete(counts, time_since_start_rounded=seq(min(time_since_start_rounded),max(time_since_start_rounded),1),fill=list(n=0))
-  counts <- dplyr::count(counts,n)
-  counts[["p"]] <- counts[["nn"]]/sum(counts[["nn"]])
-  counts <- tidyr::complete(counts, n=0:max(n),fill=list(nn=0,p=0))
-  counts[["label"]] <- paste0(round(counts[["p"]],2)*100,"%")
-  counts[["label"]] <- ifelse(counts[["nn"]] == 0, "", counts[["label"]])
+  counts[["cuts"]] <- cut(counts[["n"]], bins)
+  counts <- dplyr::count(counts, cuts)
+  counts[["p"]] <- counts[["n"]]/sum(counts[["n"]])
+  filltank <- as.factor(1L:bins); levels(filltank) <- levels(counts[["cuts"]])
+  counts <- tidyr::complete(counts, cuts = filltank, fill = list(n = 0, p = 0))
+  counts[["label"]] <- paste0(round(counts[["p"]], 2) * 100, "%")
+  counts[["label"]] <- ifelse(counts[["n"]] == 0, "", counts[["label"]])
 
-  ggplot2::ggplot(counts, ggplot2::aes(x=n,y=p,label=label))+
+  ggplot2::ggplot(counts, ggplot2::aes(x=cuts,y=p,label=label))+
     ggplot2::geom_col(fill="#E20074", color="#606060")+
     ggplot2::theme_minimal()+
     ggplot2::geom_text(vjust=-0.5)+
-    ggplot2::scale_x_continuous(breaks=seq(0,1000,1))+
     ggplot2::scale_y_continuous(limits=c(0,1),labels=function(x) paste0(round(x,2)*100,"%"))+
     ggplot2::labs(x="Requests per second",y="Percent of time at that rate",
                   title="Distribution of number of responses within a second")

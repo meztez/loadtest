@@ -25,11 +25,12 @@
 #'
 #' @param result the output of using loadtest()
 #' @param output_file the location to save the report. Defaults to creating loadtest_report.html in the working directory.
+#' @param ... Adjust the output of rmarkdown render
 #' @examples
 #' results <- loadtest(url = "https://www.t-mobile.com", method="GET", threads = 3, loops = 5)
 #' loadtest_report(results,"~/report.html")
 #' @export
-loadtest_report <- function(results, output_file=NULL){
+loadtest_report <- function(results, output_file=NULL, ...){
   if (!requireNamespace("rmarkdown", quietly = TRUE)) {
     stop("Package rmarkdown is needed for this function.",call. = FALSE)
   }
@@ -37,10 +38,14 @@ loadtest_report <- function(results, output_file=NULL){
     output_file <- file.path(getwd(),"loadtest_report.html")
     message(paste0("No output file path specified. Saving to: ",output_file))
   }
+  if(startsWith(output_file, ".")){
+    output_file <- file.path(getwd(), output_file)
+  }
 
   rmarkdown::render(system.file("report_template.Rmd", package = "loadtest"),
                     output_file = output_file,
                     intermediates_dir = dirname(output_file),
-                    params = list(results=results))
+                    params = list(results=results),
+                    ...)
 }
 
