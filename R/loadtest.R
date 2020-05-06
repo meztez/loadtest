@@ -136,6 +136,7 @@ parse_url <- function(url){
 #' @param loops The number of times each thread should hit the endpoint.
 #' @param ramp_time The time (in seconds) that it should take before all threads are firing.
 #' @param delay_per_request A delay (in milliseconds) after a thread completes before it should make its next request.
+#' @param warmup The number of times each thread should hit the endpoint before capturing the output.
 
 #' Raw assumes the body is a character and preserves it.
 #' Json converts a list into json like the pacakge httr.
@@ -185,7 +186,8 @@ loadtest <- function(url,
                      threads = 1,
                      loops = 16,
                      ramp_time = 0,
-                     delay_per_request = 0){
+                     delay_per_request = 0,
+                     warmup = 2){
   invisible(check_java_installed())
   invisible(check_jmeter_installed())
 
@@ -254,6 +256,9 @@ loadtest <- function(url,
   # where to save the results
   save_location <- tempfile(fileext = ".csv")
 
+  # include warmup
+  loops <- loops + min(0, warmup)
+
   # the full test specification
   jmx_spec <- glue::glue(template)
 
@@ -288,9 +293,19 @@ loadtest <- function(url,
   names(output) <- c("start_time", "elapsed", "response_code","response_message", "thread",
                      "request_status", "received_bytes", "sent_bytes", "threads", "latency", "idle", "connect")
 
+  #remove warmups
+  output[["thread"]] <- as.integer(gsub("^Thread Group 1-", "", output[["thread"]]))
+  if (warmup > 0) {
+    warmups <- do.call(c,
+                       lapply(
+                         unique(output[["thread"]]),
+                         function(x) {
+                           which(output[["thread"]] == x)[seq_len(warmup)]
+                           }))
+    output <- output[-warmups,]
+  }
   output[["start_time"]] <- as.POSIXct(output[["start_time"]]/1000, origin="1970-01-01")
   output[["time_since_start"]] <- round(as.numeric(output[["start_time"]]-min(output[["start_time"]]))*1000)
-  output[["thread"]] <- as.integer(gsub("^Thread Group 1-", "", output[["thread"]]))
   output[["request_id"]] <- 1:nrow(output)
   output[["request_status"]] <- factor(ifelse(output[["request_status"]],"Success","Failure"),c("Failure","Success"))
   output <- output[,c("request_id", "start_time", "thread", "threads", "response_code", "response_message",
