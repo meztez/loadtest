@@ -257,7 +257,7 @@ loadtest <- function(url,
   save_location <- tempfile(fileext = ".csv")
 
   # include warmup
-  loops <- loops + min(0, warmup)
+  loops <- loops + max(0, warmup)
 
   # the full test specification
   jmx_spec <- glue::glue(template)
