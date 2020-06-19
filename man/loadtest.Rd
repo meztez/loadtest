@@ -7,13 +7,14 @@
 loadtest(
   url,
   method = c("GET", "POST", "HEAD", "TRACE", "OPTIONS", "PUT", "DELETE"),
-  headers = NULL,
-  body = NULL,
+  http_headers = NULL,
+  post_body = NULL,
   encode = c("raw", "json"),
   threads = 1,
   loops = 16,
   ramp_time = 0,
-  delay_per_request = 0
+  delay_per_request = 0,
+  warmup = 2
 )
 }
 \arguments{
@@ -21,9 +22,9 @@ loadtest(
 
 \item{method}{The HTTP method to use. Defaults to "GET" but other common choices are "POST", "PUT", and "DELETE".}
 
-\item{headers}{A named character vector of headers to use as part of HTTP request. The names are the keys and the vector contents are the values.}
+\item{http_headers}{A named character vector of headers to use as part of HTTP request. The names are the keys and the vector contents are the values.}
 
-\item{body}{A list to be encoded as a json object to use as the body of the HTTP request.}
+\item{post_body}{A list to be encoded as a json object to use as the body of the HTTP request.}
 
 \item{encode}{The method of encoding the body, if it exists.}
 
@@ -33,7 +34,9 @@ loadtest(
 
 \item{ramp_time}{The time (in seconds) that it should take before all threads are firing.}
 
-\item{delay_per_request}{A delay (in milliseconds) after a thread completes before it should make its next request.
+\item{delay_per_request}{A delay (in milliseconds) after a thread completes before it should make its next request.}
+
+\item{warmup}{The number of times each thread should hit the endpoint before capturing the output.
 Raw assumes the body is a character and preserves it.
 Json converts a list into json like the pacakge httr.}
 }
@@ -75,8 +78,8 @@ results <- loadtest(url = "https://www.t-mobile.com", threads = 2, loops = 5)
 # a more complex POST request
 results <- loadtest(url = "http://deepmoji.teststuff.biz",
                     method = "POST",
-                    headers = c("version"="v1.0"),
-                    body = list(sentences = list("I love this band")),
+                    http_headers = c("version"="v1.0"),
+                    post_body = list(sentences = list("I love this band")),
                     encode = "json",
                     threads = 1,
                     loops = 15,

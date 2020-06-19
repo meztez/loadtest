@@ -129,8 +129,8 @@ parse_url <- function(url){
 #'
 #' @param url The url to hit as part of the test, such as https://www.t-mobile.com .
 #' @param method The HTTP method to use. Defaults to "GET" but other common choices are "POST", "PUT", and "DELETE".
-#' @param body A list to be encoded as a json object to use as the body of the HTTP request.
-#' @param headers A named character vector of headers to use as part of HTTP request. The names are the keys and the vector contents are the values.
+#' @param post_body A list to be encoded as a json object to use as the body of the HTTP request.
+#' @param http_headers A named character vector of headers to use as part of HTTP request. The names are the keys and the vector contents are the values.
 #' @param encode The method of encoding the body, if it exists.
 #' @param threads The number of threads to concurrently run in the test.
 #' @param loops The number of times each thread should hit the endpoint.
@@ -171,8 +171,8 @@ parse_url <- function(url){
 #' # a more complex POST request
 #' results <- loadtest(url = "http://deepmoji.teststuff.biz",
 #'                     method = "POST",
-#'                     headers = c("version"="v1.0"),
-#'                     body = list(sentences = list("I love this band")),
+#'                     http_headers = c("version"="v1.0"),
+#'                     post_body = list(sentences = list("I love this band")),
 #'                     encode = "json",
 #'                     threads = 1,
 #'                     loops = 15,
@@ -180,8 +180,8 @@ parse_url <- function(url){
 #' @export
 loadtest <- function(url,
                      method = c("GET", "POST", "HEAD", "TRACE", "OPTIONS", "PUT", "DELETE"),
-                     headers = NULL,
-                     body = NULL,
+                     http_headers = NULL,
+                     post_body = NULL,
                      encode = c("raw","json"),
                      threads = 1,
                      loops = 16,
@@ -210,44 +210,43 @@ loadtest <- function(url,
   header_template <- read_file_as_char(system.file("header_template.txt", package = "loadtest")) # template for each request header
   body_template <- read_file_as_char(system.file("body_template.txt", package = "loadtest")) # template for the request body, if one is needed
   query_parameters_template <- read_file_as_char(system.file("query_parameters_template.txt", package = "loadtest")) # template for the query parameters, if one is needed
+  query_parameters_collection_template <- read_file_as_char(system.file("query_parameters_collection_template_.txt", package = "loadtest")) # template for the query parameters collection, if one is needed
 
-  original_headers <- headers
-  original_body <- body
+  original_http_headers <- http_headers
+  original_post_body <- post_body
 
-  if(is.null(headers)){
-    headers <- c()
+  if(is.null(http_headers)){
+    http_headers <- c()
   }
 
   if(encode=="json"){
-    headers = c(headers,c("Content-Type"="application/json"))
+    http_headers = c(http_headers,c("Content-Type"="application/json"))
   }
 
-  if(length(headers) > 0){
-    headers_in_template <- lapply(seq_along(headers), function(i) glue::glue(header_template,name=names(headers)[[i]],value=headers[[i]]))
-    headers <- paste0(headers_in_template,collapse="\n")
+  if(length(http_headers) > 0){
+    headers_in_template <- lapply(seq_along(http_headers), function(i) glue::glue(header_template,name=names(http_headers)[[i]],value=http_headers[[i]]))
+    http_headers <- paste0(headers_in_template,collapse="\n")
   } else {
-    headers <- ""
+    http_headers <- ""
   }
 
-  if(!is.null(body)){
-
+  if(!is.null(post_body)){
     if(encode=="json"){
-      request_body <- gsub("\"", "&quot;", jsonlite::toJSON(body,auto_unbox=TRUE))
+      request_body <- gsub("\"", "&quot;", jsonlite::toJSON(post_body,auto_unbox=TRUE))
     } else if(encode=="raw"){
-      request_body <- gsub("\"", "&quot;", body)
+      request_body <- gsub("\"", "&quot;", post_body)
     } else {
       stop("'encode' value not yet supported")
     }
-    body <- glue::glue(body_template,request_body = request_body)
-  } else {
-    body <- ""
-  }
-
-  if (!is.null(query_parameters)) {
+    post_body <- glue::glue(body_template,request_body = request_body)
+    parameters <- post_body
+  } else if (!is.null(query_parameters)) {
     query_parameters_in_template <- lapply(seq_along(query_parameters), function(i) glue::glue(query_parameters_template, name=names(query_parameters)[[i]],value=query_parameters[[i]]))
     query_parameters <- paste0(query_parameters_in_template,collapse="\n")
+    query_parameters <- glue::glue(query_parameters_collection_template)
+    parameters <- query_parameters
   } else {
-    query_parameters <- ""
+    parameters <- ""
   }
 
   # where to save the test specification
@@ -313,8 +312,8 @@ loadtest <- function(url,
 
   attr(output, "config") <- list(url=url,
                                  method=method,
-                                 headers=original_headers,
-                                 body=original_body)
+                                 http_headers=original_http_headers,
+                                 post_body=original_post_body)
   tryCatch({
     file.remove(spec_location)
     file.remove(save_location)

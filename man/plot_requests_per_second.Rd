@@ -4,10 +4,12 @@
 \alias{plot_requests_per_second}
 \title{Plot the requests per second made during the test}
 \usage{
-plot_requests_per_second(results)
+plot_requests_per_second(results, bins = 10L)
 }
 \arguments{
 \item{results}{A data frame returned from the loadtest function}
+
+\item{bins}{Number of equal interval bins on the plot}
 }
 \value{
 A ggplot2 showing the distribution of requests by request per second

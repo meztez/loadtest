@@ -4,10 +4,12 @@
 \alias{loadtest_report}
 \title{Create an output report of a jmeter run}
 \usage{
-loadtest_report(results, output_file = NULL)
+loadtest_report(results, output_file = NULL, ...)
 }
 \arguments{
 \item{output_file}{the location to save the report. Defaults to creating loadtest_report.html in the working directory.}
+
+\item{...}{Adjust the output of rmarkdown render}
 
 \item{result}{the output of using loadtest()}
 }

@@ -1,0 +1,5 @@
+<elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="Query parameters" enabled="true">
+  <collectionProp name="Arguments.arguments">
+    {query_parameters}
+  </collectionProp>
+</elementProp>
