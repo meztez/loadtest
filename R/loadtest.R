@@ -232,7 +232,7 @@ loadtest <- function(url,
 
   if(!is.null(post_body)){
     if(encode=="json"){
-      request_body <- gsub("\"", "&quot;", jsonlite::toJSON(post_body,auto_unbox=TRUE))
+      request_body <- gsub("\"", "&quot;", jsonlite::toJSON(post_body,auto_unbox=TRUE,na="string",null="null"))
     } else if(encode=="raw"){
       request_body <- gsub("\"", "&quot;", post_body)
     } else {
