@@ -209,6 +209,7 @@ loadtest <- function(url,
   template <- read_file_as_char(system.file("template.jmx", package = "loadtest")) # tempate for the full request
   header_template <- read_file_as_char(system.file("header_template.txt", package = "loadtest")) # template for each request header
   body_template <- read_file_as_char(system.file("body_template.txt", package = "loadtest")) # template for the request body, if one is needed
+  body_raw_template <- read_file_as_char(system.file("body_raw_template.txt", package = "loadtest")) # template for the request body, if one is needed
   query_parameters_template <- read_file_as_char(system.file("query_parameters_template.txt", package = "loadtest")) # template for the query parameters, if one is needed
   query_parameters_collection_template <- read_file_as_char(system.file("query_parameters_collection_template_.txt", package = "loadtest")) # template for the query parameters collection, if one is needed
 
@@ -221,6 +222,8 @@ loadtest <- function(url,
 
   if(encode=="json"){
     http_headers = c(http_headers,c("Content-Type"="application/json"))
+  } else if (encode=="raw") {
+    http_headers = c(http_headers,c("Content-Type"="application/octet-stream"))
   }
 
   if(length(http_headers) > 0){
@@ -233,12 +236,15 @@ loadtest <- function(url,
   if(!is.null(post_body)){
     if(encode=="json"){
       request_body <- gsub("\"", "&quot;", jsonlite::toJSON(post_body,auto_unbox=TRUE,na="string",null="null"))
+      post_body <- glue::glue(body_template,request_body = request_body)
     } else if(encode=="raw"){
-      request_body <- gsub("\"", "&quot;", post_body)
+      request_body <- tempfile()
+      writeBin(post_body, request_body)
+      post_body <- glue::glue(body_raw_template, request_body = request_body)
+      on.exit(unlink(request_body), add = TRUE)
     } else {
       stop("'encode' value not yet supported")
     }
-    post_body <- glue::glue(body_template,request_body = request_body)
     parameters <- post_body
   } else if (!is.null(query_parameters)) {
     query_parameters_in_template <- lapply(seq_along(query_parameters), function(i) glue::glue(query_parameters_template, name=names(query_parameters)[[i]],value=query_parameters[[i]]))

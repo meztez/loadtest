@@ -47,8 +47,8 @@ test_that("loadtest works with more method/headers/body", {
   loops <- 5
   results <- loadtest("http://httpbin.org/post",
                       method = "POST",
-                      headers = c("version" = "v1.0"),
-                      body = list(text = "example text"),
+                      http_headers = c("version" = "v1.0"),
+                      post_body = list(text = "example text"),
                       encode = "json",
                       threads = threads,
                       loops = loops,
@@ -73,8 +73,8 @@ test_that("loadtest works with nested body", {
   loops <- 5
   results <- loadtest("http://httpbin.org/post",
                       method = "POST",
-                      headers = c("version" = "v1.0"),
-                      body = list(text = list("example text")),
+                      http_headers = c("version" = "v1.0"),
+                      post_body = list(text = list("example text")),
                       encode = "json",
                       threads = threads,
                       loops = loops,
