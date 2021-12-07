@@ -78,7 +78,7 @@ parse_query_string <- function(query_string) {
 #'
 parse_url <- function(url){
   # split the url into its core parts
-  parsed_url <- regmatches(url,regexec("(https?://)?(.*?)(:[0-9]+)?((/.*)|$)", url))[[1]]
+  parsed_url <- regmatches(url,regexec("(https?://)?([^:]*?)(:[0-9]+)?((/.*)|$)", url))[[1]]
   # find the protocol. Assume HTTP unless explicitly stated
   if(parsed_url[[2]]==""){
     protocol <- "http"
