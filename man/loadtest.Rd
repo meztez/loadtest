@@ -22,7 +22,7 @@ loadtest(
 
 \item{method}{The HTTP method to use. Defaults to "GET" but other common choices are "POST", "PUT", and "DELETE".}
 
-\item{http_headers}{A named character vector of headers to use as part of HTTP request. The names are the keys and the vector contents are the values.}
+\item{http_headers}{A named list of headers to use as part of HTTP request. The names are the keys and the contents are the values.}
 
 \item{post_body}{A list to be encoded as a json object to use as the body of the HTTP request.}
 

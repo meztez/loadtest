@@ -130,7 +130,7 @@ parse_url <- function(url){
 #' @param url The url to hit as part of the test, such as https://www.t-mobile.com .
 #' @param method The HTTP method to use. Defaults to "GET" but other common choices are "POST", "PUT", and "DELETE".
 #' @param post_body A list to be encoded as a json object to use as the body of the HTTP request.
-#' @param http_headers A named character vector of headers to use as part of HTTP request. The names are the keys and the vector contents are the values.
+#' @param http_headers A named list of headers to use as part of HTTP request. The names are the keys and the contents are the values.
 #' @param encode The method of encoding the body, if it exists.
 #' @param threads The number of threads to concurrently run in the test.
 #' @param loops The number of times each thread should hit the endpoint.
@@ -217,13 +217,15 @@ loadtest <- function(url,
   original_post_body <- post_body
 
   if(is.null(http_headers)){
-    http_headers <- c()
+    http_headers <- list()
+  } else {
+    names(http_headers) <- tolower(names(http_headers))
   }
 
   if(encode=="json"){
-    http_headers = c(http_headers,c("Content-Type"="application/json"))
-  } else if (encode=="raw") {
-    http_headers = c(http_headers,c("Content-Type"="application/octet-stream"))
+    http_headers = modifyList(list("content-type" = "application/json"), http_headers)
+  } else if (encode == "raw") {
+    http_headers = modifyList(list("content-type" = "application/octet-stream"), http_headers)
   }
 
   if(length(http_headers) > 0){
