@@ -222,24 +222,13 @@ loadtest <- function(url,
     names(http_headers) <- tolower(names(http_headers))
   }
 
-  if(encode=="json"){
-    http_headers = modifyList(list("content-type" = "application/json"), http_headers)
-  } else if (encode == "raw") {
-    http_headers = modifyList(list("content-type" = "application/octet-stream"), http_headers)
-  }
-
-  if(length(http_headers) > 0){
-    headers_in_template <- lapply(seq_along(http_headers), function(i) glue::glue(header_template,name=names(http_headers)[[i]],value=http_headers[[i]]))
-    http_headers <- paste0(headers_in_template,collapse="\n")
-  } else {
-    http_headers <- ""
-  }
-
   if(!is.null(post_body)){
     if(encode=="json"){
+      http_headers = modifyList(list("content-type" = "application/json"), http_headers)
       request_body <- gsub("\"", "&quot;", jsonlite::toJSON(post_body,auto_unbox=TRUE,na="string",null="null"))
       post_body <- glue::glue(body_template,request_body = request_body)
     } else if(encode=="raw"){
+      http_headers = modifyList(list("content-type" = "application/octet-stream"), http_headers)
       request_body <- tempfile()
       writeBin(post_body, request_body)
       post_body <- glue::glue(body_raw_template, request_body = request_body)
@@ -255,6 +244,13 @@ loadtest <- function(url,
     parameters <- query_parameters
   } else {
     parameters <- ""
+  }
+
+  if(length(http_headers) > 0){
+    headers_in_template <- lapply(seq_along(http_headers), function(i) glue::glue(header_template,name=names(http_headers)[[i]],value=http_headers[[i]]))
+    http_headers <- paste0(headers_in_template,collapse="\n")
+  } else {
+    http_headers <- ""
   }
 
   # where to save the test specification
