@@ -234,7 +234,7 @@ loadtest <- function(url,
       post_body <- glue::glue(body_raw_template, request_body = request_body)
       on.exit(unlink(request_body), add = TRUE)
     } else {
-      stop("'encode' value not yet supported")
+      warning("Not doing anything on post_body and http headers")
     }
     parameters <- post_body
   } else if (!is.null(query_parameters)) {
