@@ -222,6 +222,8 @@ loadtest <- function(url,
     names(http_headers) <- tolower(names(http_headers))
   }
 
+  parameters <- ""
+  
   if(!is.null(post_body)){
     if(encode=="json"){
       http_headers = modifyList(list("content-type" = "application/json"), http_headers)
@@ -233,17 +235,19 @@ loadtest <- function(url,
       writeBin(post_body, request_body)
       post_body <- glue::glue(body_raw_template, request_body = request_body)
       on.exit(unlink(request_body), add = TRUE)
+    } else if(file.exists(post_body)){
+      post_body <- glue::glue(body_raw_template, request_body = post_body)
     } else {
-      warning("Not doing anything on post_body and http headers")
+      stop("Invalid file path for none encoding")
     }
-    parameters <- post_body
-  } else if (!is.null(query_parameters)) {
+    parameters <- paste0(parameters, post_body)
+  }
+
+  if (!is.null(query_parameters)) {
     query_parameters_in_template <- lapply(seq_along(query_parameters), function(i) glue::glue(query_parameters_template, name=names(query_parameters)[[i]],value=query_parameters[[i]]))
     query_parameters <- paste0(query_parameters_in_template,collapse="\n")
     query_parameters <- glue::glue(query_parameters_collection_template)
-    parameters <- query_parameters
-  } else {
-    parameters <- ""
+    parameters <- paste0(parameters, query_parameters)
   }
 
   if(length(http_headers) > 0){
